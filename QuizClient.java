@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.List;
 
 public class QuizClient {
     private final String host;
@@ -24,17 +25,25 @@ public class QuizClient {
     }
 
     public void syncWithPeer(String peerHost, int peerPort) throws IOException, ClassNotFoundException {
-        QuizClient peerClient = new QuizClient(peerHost, peerPort);
-        List<Question> peerQuestions = peerClient.fetchQuestions();
+        List<Question> peerQuestions;
 
         try (
-            Socket socket = new Socket(host, port);
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream())
+            Socket peerSocket = new Socket(peerHost, peerPort);
+            ObjectOutputStream outPeer = new ObjectOutputStream(peerSocket.getOutputStream());
+            ObjectInputStream inPeer = new ObjectInputStream(peerSocket.getInputStream())
         ) {
-            out.writeObject("SYNC");
-            out.writeObject(peerQuestions);
-            System.out.println("Resposta do servidor: " + in.readObject());
+            outPeer.writeObject("LIST");
+            peerQuestions = (List<Question>) inPeer.readObject();
+        }
+
+        try (
+            Socket serverSocket = new Socket(host, port);
+            ObjectOutputStream outServer = new ObjectOutputStream(serverSocket.getOutputStream());
+            ObjectInputStream inServer = new ObjectInputStream(serverSocket.getInputStream())
+        ) {
+            outServer.writeObject("SYNC");
+            outServer.writeObject(peerQuestions);
+            System.out.println("Resposta do servidor: " + inServer.readObject());
         }
     }
 
@@ -60,12 +69,14 @@ public class QuizClient {
     }
 
     public static void main(String[] args) throws Exception {
-        String host = args.length > 0 ? args[0] : "localhost";
-        int port = args.length > 1 ? Integer.parseInt(args[1]) : 12345;
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Host do servidor: ");
+        String host = sc.next();
+        System.out.print("Porta do servidor: ");
+        int port = sc.nextInt();
 
         QuizClient client = new QuizClient(host, port);
 
-        Scanner sc = new Scanner(System.in);
         while (true) {
             System.out.println("\n--- MENU ---");
             System.out.println("1. Jogar");

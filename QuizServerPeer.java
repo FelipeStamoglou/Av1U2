@@ -4,26 +4,28 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.List;
 
-public class QuizServer {
+public class QuizServerPeer {
 
     private final int port;
     private final List<Question> questionBank = new CopyOnWriteArrayList<>();
 
-    public QuizServer(int port) {
+    public QuizServerPeer(int port) {
         this.port = port;
-        loadSampleQuestions();
+        loadPeerQuestions();
     }
 
-    private void loadSampleQuestions() {
-        questionBank.add(new Question("Java", "Qual palavra-chave é usada para herança em Java?",
-                Arrays.asList("implements", "extends", "inherits", "instanceof"), 1));
-        questionBank.add(new Question("Redes", "Qual protocolo é usado para enviar e-mails?",
-                Arrays.asList("HTTP", "SMTP", "FTP", "SNMP"), 1));
+    private void loadPeerQuestions() {
+        questionBank.add(new Question("Python", "Qual função imprime no console?",
+                Arrays.asList("echo()", "print()", "console.log()", "write()"), 1));
+        questionBank.add(new Question("Banco de Dados", "Qual comando cria uma tabela em SQL?",
+                Arrays.asList("CREATE TABLE", "INSERT INTO", "SELECT", "DROP TABLE"), 0));
+        questionBank.add(new Question("Curso", "Como eu vou ficar até terminar o curso?",
+                Arrays.asList("Louco", "Calvo", "Ansioso", "Todas as anteriores"), 3));
     }
 
     public void start() throws IOException {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Servidor rodando na porta " + port);
+            System.out.println("Servidor Peer rodando na porta " + port);
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 new Thread(() -> handleClient(clientSocket)).start();
@@ -70,8 +72,8 @@ public class QuizServer {
     }
 
     public static void main(String[] args) throws IOException {
-        int port = args.length > 0 ? Integer.parseInt(args[0]) : 12345;
-        QuizServer server = new QuizServer(port);
+        int port = args.length > 0 ? Integer.parseInt(args[0]) : 12346;
+        QuizServerPeer server = new QuizServerPeer(port);
         server.start();
     }
 }
